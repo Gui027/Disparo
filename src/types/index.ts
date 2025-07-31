@@ -1,7 +1,7 @@
 import { Node, Edge, XYPosition, NodeProps } from "reactflow";
 
 // Tipos de componentes possíveis
-export type ComponentType = "text" | "button" | "image";
+export type ComponentType = "text" | "button" | "image" | "delay";
 
 export interface NodeComponent {
   id: string;

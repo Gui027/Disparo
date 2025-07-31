@@ -26,7 +26,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
     e.preventDefault();
     const rawType = e.dataTransfer.getData("component-type");
 
-    if (!["text", "button", "image"].includes(rawType)) return;
+    if (!["text", "button", "image", "delay"].includes(rawType)) return;
 
     const type = rawType as "text" | "button" | "image";
 
@@ -39,7 +39,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
 
   return (
     <div
-      className={`bg-white shadow-md border border-gray-200 rounded-2xl p-4 w-[300px] text-sm space-y-3 ${
+      className={`bg-white border border-gray-300 rounded-lg shadow-sm w-[260px] p-0 text-sm ${
         selected ? "ring-2 ring-blue-500" : ""
       }`}
       onDrop={handleDrop}
@@ -47,25 +47,30 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
     >
       <Handle
         type="target"
-        position={Position.Top}
-        className="w-2 h-2 bg-blue-400"
+        position={Position.Left}
+        className="w-2 h-2 bg-orange-300"
       />
 
-      <div className="text-gray-900 font-semibold">{data.title}</div>
+      {/* Header do nó */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200">
+        <div className="text-lg">💬</div>
+        <div className="text-sm font-medium text-gray-800">{data.title}</div>
+      </div>
 
-      <div className="space-y-2">
+      {/* Conteúdo dos componentes */}
+      <div className="px-3 py-2 space-y-2">
         {(data.components || []).map((comp) => (
           <div key={comp.id}>
             {comp.type === "text" && (
               <textarea
-                className="w-full text-sm border rounded-md p-2 resize-none"
+                className="w-full text-sm border rounded-md p-2 resize-none bg-gray-50"
                 rows={2}
                 value={comp.content}
                 onChange={(e) => handleComponentEdit(comp.id, e.target.value)}
               />
             )}
             {comp.type === "button" && (
-              <button className="w-full bg-blue-100 text-blue-800 px-3 py-1 rounded">
+              <button className="w-full bg-blue-100 text-blue-800 px-3 py-1 rounded-md text-sm font-medium">
                 {comp.content}
               </button>
             )}
@@ -98,24 +103,43 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-
                     const reader = new FileReader();
                     reader.onload = () => {
                       if (reader.result) {
                         handleComponentEdit(comp.id, reader.result.toString());
                       }
                     };
-                    reader.readAsDataURL(file); // ✅ transforma em base64
+                    reader.readAsDataURL(file);
                   }}
                 />
+              </div>
+            )}
+            {comp.type === "delay" && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 bg-orange-50 border border-orange-200 rounded px-3 py-2">
+                ⏱ Delay:
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  className="w-16 border border-gray-300 rounded px-2 py-1 text-xs"
+                  value={comp.content}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^\d*$/.test(val)) {
+                      handleComponentEdit(comp.id, val);
+                    }
+                  }}
+                />
+                s
               </div>
             )}
           </div>
         ))}
       </div>
 
-      <div className="flex justify-between text-xs text-gray-500 pt-2">
-        <span>Delay: {data.delay || 0}s</span>
+      {/* Rodapé do nó */}
+      <div className="flex justify-between items-center text-xs text-gray-500 border-t px-3 py-2">
+        <span>⏱ {data.delay || 0}s</span>
         <button onClick={handleDelete} className="text-red-500 hover:underline">
           Excluir
         </button>
@@ -123,8 +147,8 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
 
       <Handle
         type="source"
-        position={Position.Bottom}
-        className="w-2 h-2 bg-blue-400"
+        position={Position.Right}
+        className="w-2 h-2 bg-orange-300"
       />
     </div>
   );

@@ -8,21 +8,21 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   NodeTypes,
+  Connection,
+  MarkerType,
+  ConnectionLineType,
 } from "reactflow";
 import "reactflow/dist/style.css";
 
-import { Connection } from "reactflow";
+import useFlowStore from "../store/flowStore";
+import FlowNode from "./FlowNode";
+import { FlowNode as FlowNodeType, FlowState } from "../types";
 
 type Props = {
   isAddingNode: boolean;
   onFinishAddNode: () => void;
 };
 
-import useFlowStore from "../store/flowStore";
-import FlowNode from "./FlowNode";
-import { FlowNode as FlowNodeType, FlowState } from "../types";
-
-// Registrando o nó personalizado
 const nodeTypes: NodeTypes = {
   flowNode: FlowNode,
 };
@@ -37,16 +37,13 @@ const FlowCanvas: React.FC<Props> = ({ isAddingNode, onFinishAddNode }) => {
   const initStore = useFlowStore((state: FlowState) => state.init);
   const addStoreEdge = useFlowStore((state: FlowState) => state.addEdge);
 
-  // Estados locais para React Flow
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
-  // Inicializar o store e sincronizar com o estado local
   useEffect(() => {
     initStore();
   }, [initStore]);
 
-  // Sincronizar o estado do store com o estado local do React Flow
   useEffect(() => {
     setNodes(storeNodes);
     setEdges(storeEdges);
@@ -76,13 +73,12 @@ const FlowCanvas: React.FC<Props> = ({ isAddingNode, onFinishAddNode }) => {
           y: event.clientY - bounds.top,
         };
         addStoreNode(position);
-        onFinishAddNode(); // resetar flag
+        onFinishAddNode();
       }
     },
     [addStoreNode, isAddingNode, onFinishAddNode]
   );
 
-  // Atualizar posições dos nós após arrastar
   const onNodeDragStop: NodeDragHandler = useCallback(
     (event: MouseEvent, node: Node) => {
       updateNodePositions([node as FlowNodeType]);
@@ -102,6 +98,16 @@ const FlowCanvas: React.FC<Props> = ({ isAddingNode, onFinishAddNode }) => {
         onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypes}
         fitView
+        connectionLineType={ConnectionLineType.Bezier}
+        connectionLineStyle={{ stroke: "#999", strokeWidth: 2 }}
+        defaultEdgeOptions={{
+          type: "default",
+          style: { stroke: "#999", strokeWidth: 2 },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: "#999",
+          },
+        }}
       >
         <Background />
         <Controls />

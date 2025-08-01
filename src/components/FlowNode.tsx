@@ -32,8 +32,14 @@ const SortableItem = ({
   onEdit: (id: string, val: string) => void;
   onContextMenu: (e: React.MouseEvent, id: string) => void;
 }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: component.id });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: component.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -103,25 +109,6 @@ const SortableItem = ({
           />
         </div>
       )}
-      {component.type === "delay" && (
-        <div className="flex items-center gap-2 text-sm text-gray-600 bg-orange-50 border border-orange-200 rounded px-3 py-2">
-          ⏱ Delay:
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            className="w-16 border border-gray-300 rounded px-2 py-1 text-xs"
-            value={component.content}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (/^\d*$/.test(val)) {
-                onEdit(component.id, val);
-              }
-            }}
-          />
-          s
-        </div>
-      )}
     </div>
   );
 };
@@ -135,7 +122,8 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
 
   const [editingTitle, setEditingTitle] = React.useState(false);
   const [titleValue, setTitleValue] = React.useState(data.title || "");
-  const [draggingComponent, setDraggingComponent] = React.useState<NodeComponent | null>(null);
+  const [draggingComponent, setDraggingComponent] =
+    React.useState<NodeComponent | null>(null);
 
   const updateNode = useFlowStore((s) => s.updateNode);
   const removeNode = useFlowStore((s) => s.removeNode);
@@ -201,11 +189,17 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
       onDragOver={(e) => e.preventDefault()}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <Handle type="target" position={Position.Left} className="w-2 h-2 bg-orange-300" />
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="custom-handle"
+      />
 
       <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200">
-        
-        <div className="text-sm font-medium text-gray-800 cursor-pointer" onClick={() => setEditingTitle(true)}>
+        <div
+          className="text-sm font-medium text-gray-800 cursor-pointer"
+          onClick={() => setEditingTitle(true)}
+        >
           {editingTitle ? (
             <input
               type="text"
@@ -239,14 +233,21 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
           onDragEnd={({ active, over }) => {
             setDraggingComponent(null);
             if (active.id !== over?.id) {
-              const oldIndex = data.components.findIndex((c) => c.id === active.id);
-              const newIndex = data.components.findIndex((c) => c.id === over?.id);
+              const oldIndex = data.components.findIndex(
+                (c) => c.id === active.id
+              );
+              const newIndex = data.components.findIndex(
+                (c) => c.id === over?.id
+              );
               const newOrder = arrayMove(data.components, oldIndex, newIndex);
               updateNode(id, { components: newOrder });
             }
           }}
         >
-          <SortableContext items={data.components.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+          <SortableContext
+            items={data.components.map((c) => c.id)}
+            strategy={verticalListSortingStrategy}
+          >
             {data.components.map((comp) => (
               <SortableItem
                 key={comp.id}
@@ -260,24 +261,35 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
           <DragOverlay>
             {draggingComponent && (
               <div className="p-2 bg-white rounded border shadow-md w-[240px] opacity-90">
-                {draggingComponent.type === "text" && <div className="text-xs text-gray-400">Texto</div>}
-                {draggingComponent.type === "button" && <div className="text-xs text-blue-500 font-medium">Botão</div>}
-                {draggingComponent.type === "image" && <div className="text-xs text-gray-500">🖼️ Imagem</div>}
-                {draggingComponent.type === "delay" && <div className="text-xs text-orange-600">⏱ Delay</div>}
+                {draggingComponent.type === "text" && (
+                  <div className="text-xs text-gray-400">Texto</div>
+                )}
+                {draggingComponent.type === "button" && (
+                  <div className="text-xs text-blue-500 font-medium">Botão</div>
+                )}
+                {draggingComponent.type === "image" && (
+                  <div className="text-xs text-gray-500">🖼️ Imagem</div>
+                )}
+                {draggingComponent.type === "delay" && (
+                  <div className="text-xs text-orange-600">⏱ Delay</div>
+                )}
               </div>
             )}
           </DragOverlay>
         </DndContext>
       </div>
 
-      <div className="flex justify-between items-center text-xs text-gray-500 border-t px-3 py-2">
-        <span>⏱ {data.delay || 0}s</span>
+      <div className="flex justify-end items-center text-xs text-gray-500 border-t px-3 py-2">
         <button onClick={handleDelete} title="Excluir">
           <Trash className="w-4 h-4 text-red-500 hover:text-red-700" />
         </button>
       </div>
 
-      <Handle type="source" position={Position.Right} className="w-2 h-2 bg-orange-300" />
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="custom-handle"
+      />
 
       {contextMenu && (
         <div
@@ -288,7 +300,9 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
           <button
             className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-left text-gray-700"
             onClick={() => {
-              const comp = data.components.find((c) => c.id === contextMenu.compId);
+              const comp = data.components.find(
+                (c) => c.id === contextMenu.compId
+              );
               if (!comp) return;
               addComponentToNode(id, {
                 ...comp,
@@ -303,7 +317,9 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
           <button
             className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-left text-red-500"
             onClick={() => {
-              const newComponents = data.components.filter((c) => c.id !== contextMenu.compId);
+              const newComponents = data.components.filter(
+                (c) => c.id !== contextMenu.compId
+              );
               updateNode(id, { components: newComponents });
               setContextMenu(null);
             }}

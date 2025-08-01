@@ -23,3 +23,15 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans, "Inter", sans-serif);
 }
+
+.custom-handle {
+  width: 12px !important;
+  height: 12px !important;
+  background-color: white !important;
+  border: 2px solid #fb923c !important; /* Tailwind orange-300 */
+  border-radius: 50% !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 0 0 1px white inset !important; /* aro interno branco */
+  z-index: 10;
+  pointer-events: all !important;
+}

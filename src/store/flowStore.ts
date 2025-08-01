@@ -31,25 +31,41 @@ const useFlowStore = create<FlowState>((set, get) => ({
     }
   },
 
-  addNode: (position: XYPosition) => {
-    const newNode: FlowNode = {
-      id: nanoid(),
-      type: "flowNode",
-      position,
-      data: {
-        title: "Nova Mensagem",
-        delay: 0,
-        components: [],
-      },
-    };
+  addNode: (position: XYPosition, components: NodeComponent[] = []) => {
+  const existingNodes = get().nodes;
 
-    set((state) => ({
-      nodes: [...state.nodes, newNode],
-    }));
+  // Filtra os nós com títulos padrão "Grupo #N"
+  const grupoTitles = existingNodes
+    .map((node) => node.data.title)
+    .filter((title) => /^Grupo #\d+$/.test(title || ""));
 
-    get().saveFlow();
-    return newNode.id;
-  },
+  // Extrai os números e pega o maior
+  const usedNumbers = grupoTitles
+    .map((title) => parseInt(title!.replace("Grupo #", ""), 10))
+    .filter((num) => !isNaN(num));
+
+  const nextNumber = usedNumbers.length > 0 ? Math.max(...usedNumbers) + 1 : 1;
+  const autoTitle = `Grupo #${nextNumber}`;
+
+  const newNode: FlowNode = {
+    id: nanoid(),
+    type: "flowNode",
+    position,
+    data: {
+      title: autoTitle,
+      delay: 0,
+      components,
+    },
+  };
+
+  set((state) => ({
+    nodes: [...state.nodes, newNode],
+  }));
+
+  get().saveFlow();
+  return newNode.id;
+},
+
 
   updateNode: (id: string, data: Partial<NodeData>) => {
     set((state) => ({

@@ -13,6 +13,7 @@ import ReactFlow, {
   ConnectionLineType,
 } from "reactflow";
 import "reactflow/dist/style.css";
+import { nanoid } from "nanoid";
 
 import useFlowStore from "../store/flowStore";
 import FlowNode from "./FlowNode";
@@ -86,6 +87,41 @@ const FlowCanvas: React.FC<Props> = ({ isAddingNode, onFinishAddNode }) => {
     [updateNodePositions]
   );
 
+  const onDrop = useCallback(
+  (event: React.DragEvent) => {
+    event.preventDefault();
+
+    const rawType = event.dataTransfer.getData("component-type");
+
+    // Não continua se foi solto dentro de um nó (já tratado lá)
+    if (event.target && (event.target as HTMLElement).closest(".flow-node")) {
+      return;
+    }
+
+    if (!["text", "button", "image", "delay"].includes(rawType)) return;
+
+    const type = rawType as "text" | "button" | "image" | "delay";
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const position = {
+      x: event.clientX - bounds.left,
+      y: event.clientY - bounds.top,
+    };
+
+    // ✅ Aqui sim cria novo node com o componente
+    addStoreNode(position, [
+      {
+        id: nanoid(),
+        type,
+        content: type === "button" ? "Clique aqui" : "",
+      },
+    ]);
+  },
+  [addStoreNode]
+);
+
+
+
   return (
     <div className="w-full h-screen">
       <ReactFlow
@@ -107,7 +143,10 @@ const FlowCanvas: React.FC<Props> = ({ isAddingNode, onFinishAddNode }) => {
             type: MarkerType.ArrowClosed,
             color: "#999",
           },
+          
         }}
+        onDrop={onDrop}
+  onDragOver={(e) => e.preventDefault()} // obrigatório para permitir o drop
       >
         <Background />
         <Controls />

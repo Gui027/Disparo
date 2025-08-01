@@ -28,7 +28,7 @@ export interface FlowState {
   edges: Edge[];
   init: () => void;
   saveFlow: () => void;
-  addNode: (position: XYPosition) => string;
+  addNode: (position: XYPosition, components?: NodeComponent[]) => string;
   updateNode: (id: string, data: Partial<NodeData>) => void;
   removeNode: (id: string) => void;
   addEdge: (edge: Omit<Edge, "id">) => void;

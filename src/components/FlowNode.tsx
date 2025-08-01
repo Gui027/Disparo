@@ -53,7 +53,10 @@ const SortableItem = ({
       style={style}
       {...attributes}
       {...listeners}
-      onContextMenu={(e) => onContextMenu(e, component.id)}
+      onContextMenu={(e) => {
+        e.stopPropagation(); // impede que o clique direito atinja o nó
+        onContextMenu(e, component.id);
+      }}
       className="relative"
     >
       {component.type === "text" && (
@@ -117,7 +120,7 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
   const [contextMenu, setContextMenu] = React.useState<{
     x: number;
     y: number;
-    compId: string;
+    compId: string | null; // pode ser null para o nó inteiro
   } | null>(null);
 
   const [editingTitle, setEditingTitle] = React.useState(false);
@@ -188,6 +191,14 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
       onDrop={handleDrop}
       onDragOver={(e) => e.preventDefault()}
       onPointerDown={(e) => e.stopPropagation()}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        const nodeRect = e.currentTarget.getBoundingClientRect();
+        const offsetX = e.clientX - nodeRect.left;
+        const offsetY = e.clientY - nodeRect.top;
+
+        setContextMenu({ x: offsetX, y: offsetY, compId: null }); // <== é o nó inteiro
+      }}
     >
       <Handle
         type="target"
@@ -279,12 +290,6 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
         </DndContext>
       </div>
 
-      <div className="flex justify-end items-center text-xs text-gray-500 border-t px-3 py-2">
-        <button onClick={handleDelete} title="Excluir">
-          <Trash className="w-4 h-4 text-red-500 hover:text-red-700" />
-        </button>
-      </div>
-
       <Handle
         type="source"
         position={Position.Right}
@@ -300,27 +305,55 @@ const FlowNode: React.FC<FlowNodeProps> = ({ id, data, selected }) => {
           <button
             className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-left text-gray-700"
             onClick={() => {
-              const comp = data.components.find(
-                (c) => c.id === contextMenu.compId
-              );
-              if (!comp) return;
-              addComponentToNode(id, {
-                ...comp,
-                id: nanoid(),
-              });
+              if (contextMenu.compId) {
+                // Duplicar componente
+                const comp = data.components.find(
+                  (c) => c.id === contextMenu.compId
+                );
+                if (!comp) return;
+                addComponentToNode(id, {
+                  ...comp,
+                  id: nanoid(),
+                });
+              } else {
+                // Duplicar nó
+                const newNodeId = nanoid();
+                const currentNode = {
+                  ...useFlowStore.getState().nodes.find((n) => n.id === id)!,
+                  id: newNodeId,
+                  position: {
+                    x:
+                      useFlowStore.getState().nodes.find((n) => n.id === id)!
+                        .position.x + 50,
+                    y:
+                      useFlowStore.getState().nodes.find((n) => n.id === id)!
+                        .position.y + 50,
+                  },
+                };
+                useFlowStore.setState((state) => ({
+                  nodes: [...state.nodes, currentNode],
+                }));
+              }
               setContextMenu(null);
             }}
           >
             <Copy className="w-4 h-4" />
             Duplicar
           </button>
+
           <button
             className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 w-full text-left text-red-500"
             onClick={() => {
-              const newComponents = data.components.filter(
-                (c) => c.id !== contextMenu.compId
-              );
-              updateNode(id, { components: newComponents });
+              if (contextMenu.compId) {
+                // Excluir componente
+                const newComponents = data.components.filter(
+                  (c) => c.id !== contextMenu.compId
+                );
+                updateNode(id, { components: newComponents });
+              } else {
+                // Excluir nó inteiro
+                removeNode(id);
+              }
               setContextMenu(null);
             }}
           >
